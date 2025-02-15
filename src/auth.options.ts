@@ -36,7 +36,19 @@ export const authOptions: NextAuthConfig = {
       if (token) {
         session.user.id = token.id as string;
         session.user.role = token.role as 'user' | 'admin';
-        session.user.subscription = token.subscription;
+        session.user.subscription = token.subscription as {
+          plan: "free" | "basic" | "premium";
+          status: "active" | "inactive" | "canceled";
+          startDate: Date;
+          endDate: Date;
+          autoRenew: boolean;
+          paymentHistory: {
+            amount: number;
+            date: Date;
+            status: "success" | "failed";
+            transactionId: string;
+          }[];
+        };
       }
       return session;
     },

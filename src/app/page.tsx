@@ -10,10 +10,10 @@ export default function Home() {
     <main>
       <Header />
       <HeroSection />
-      <StatsSection />
-      <FeaturesSection />
+      {/* <StatsSection />
+      <FeaturesSection /> */}
       {/* <PricingSection /> */}
-      <CTASection />
+      {/* <CTASection /> */}
     </main>
   );
 }

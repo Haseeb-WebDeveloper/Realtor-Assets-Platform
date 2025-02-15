@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { User } from "@/models/user.model";
-import connectToDatabase from "@/lib/db";
+import { connectToDatabase } from "@/lib/db";
 
 export const runtime = 'nodejs';
 
