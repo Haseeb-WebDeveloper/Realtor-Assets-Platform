@@ -23,7 +23,7 @@ export function UserNav() {
           <Avatar className="h-8 w-8">
             <AvatarImage src={session?.user?.image || ""} alt="User avatar" />
             <AvatarFallback>
-              {session?.user?.name?.charAt(0) || "U"}
+              {session?.user?.name?.charAt(0).toUpperCase() || "U"}
             </AvatarFallback>
           </Avatar>
         </Button>
@@ -47,7 +47,7 @@ export function UserNav() {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          className="text-destructive"
+          className="text-foreground"
           onClick={() => signOut()}
         >
           Log out

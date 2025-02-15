@@ -6,7 +6,8 @@ import { ModeToggle } from "@/components/mode-toggle";
 import { Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
-
+import { useSession } from "next-auth/react";
+import { UserNav } from "@/components/dashboard/user-nav";
 const routes = [
   {
     href: "/templates",
@@ -24,7 +25,8 @@ const routes = [
 
 export function Header() {
   const pathname = usePathname();
-
+  const { data: session } = useSession();
+  const user = session?.user;
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 items-center">
@@ -54,14 +56,19 @@ export function Header() {
         {/* Right side buttons */}
         <div className="flex items-center gap-4">
           <ModeToggle />
-          <Link href="/login">
-            <Button variant="ghost" size="sm">
-              Sign in
-            </Button>
-          </Link>
-          <Link href="/signup">
-            <Button size="sm">Sign up</Button>
-          </Link>
+          {user ? (
+            <Link href="/dashboard">
+              <Button variant="default" size="sm">
+                Dashboard
+              </Button>
+            </Link>
+          ) : (
+            <Link href="/login">
+              <Button variant="ghost" size="sm">
+                Sign in
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
     </header>

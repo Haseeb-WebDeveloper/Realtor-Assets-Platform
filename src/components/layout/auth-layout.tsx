@@ -10,8 +10,8 @@ interface AuthLayoutProps {
 
 export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
   return (
-    <div className="container relative min-h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0">
-      <motion.div
+    <div className="container mx-auto relative min-h-screen flex-col items-center justify-center ">
+      {/* <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
@@ -41,14 +41,14 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
             <footer className="text-sm">Sarah Johnson, Real Estate Professional</footer>
           </blockquote>
         </div>
-      </motion.div>
+      </motion.div> */}
       <motion.div
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
-        className="lg:p-8"
+        className="mt-12"
       >
-        <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px] lg:w-[400px]">
+        <div className="mx-auto flex w-full flex-col justify-center space-y-6 max-w-md bg-muted/10 py-6 px-8 border border-border rounded-md">
           <div className="flex flex-col space-y-2 text-center">
             <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
             <p className="text-sm text-muted-foreground">{subtitle}</p>

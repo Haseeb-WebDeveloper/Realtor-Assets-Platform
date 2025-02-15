@@ -128,7 +128,7 @@ export function LoginForm() {
           </Button>
         </form>
       </Form>
-      <div className="relative">
+      {/* <div className="relative">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t" />
         </div>
@@ -145,7 +145,7 @@ export function LoginForm() {
         <Button variant="outline" type="button" disabled={isLoading}>
           Continue with GitHub
         </Button>
-      </div>
+      </div> */}
       <div className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{" "}
         <Link
