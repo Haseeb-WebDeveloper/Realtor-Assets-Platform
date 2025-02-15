@@ -3,10 +3,14 @@ import bcrypt from "bcryptjs";
 import { User } from "@/models/user.model";
 import connectToDatabase from "@/lib/db";
 
+export const runtime = 'nodejs';
+
 export async function POST(req: Request) {
   try {
     const { name, email, password } = await req.json();
 
+    console.log(name, email, password);
+    
     if (!name || !email || !password) {
       return NextResponse.json(
         { message: "Missing required fields" },

@@ -168,10 +168,14 @@ const UserSchema = new Schema<IUser>({
   timestamps: true
 });
 
-// Index for faster queries
-UserSchema.index({ email: 1 });
-UserSchema.index({ 'subscription.status': 1 });
-UserSchema.index({ 'subscription.endDate': 1 });
+// Remove the individual index declarations and combine them
+UserSchema.index(
+  { 
+    email: 1,
+    'subscription.status': 1,
+    'subscription.endDate': 1 
+  }
+);
 
 // Helper method to check if user has active subscription
 UserSchema.methods.hasActiveSubscription = function(): boolean {
