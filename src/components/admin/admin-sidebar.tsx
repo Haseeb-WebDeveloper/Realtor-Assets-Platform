@@ -12,6 +12,7 @@ import {
   CreditCard,
   BarChart,
   Bell,
+  Upload,
 } from "lucide-react";
 
 const routes = [
@@ -19,6 +20,11 @@ const routes = [
     label: "Dashboard",
     icon: LayoutDashboard,
     href: "/admin/dashboard",
+  },
+  {
+    label: "Upload",
+    icon: Upload,
+    href: "/admin/upload",
   },
   {
     label: "Users",
@@ -63,7 +69,7 @@ export function AdminSidebar() {
   return (
     <div className="space-y-4 py-4 flex flex-col h-screen bg-background border-r">
       <div className="px-3 py-2">
-        <Link href="/admin/dashboard" className="flex items-center pl-3 mb-14">
+        <Link href="/admin/dashboard" className="flex items-center pl-3 mb-8">
           <h1 className="text-xl font-bold">Admin Dashboard</h1>
         </Link>
         <div className="space-y-1">

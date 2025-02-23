@@ -8,9 +8,9 @@ async function createAdmin() {
 
 
     const adminData = {
-      name: "Haseeb Ahmed Raza Khan",
-      email: "web.dev.haseeb@gmail.com",
-      password: "$2b$10$QFcPD4IXc0569lIYB4A/NuWqcMXUDbkbCZgiWCNZZARdMm9GYV.Le",
+      name: "Aloaye Ali",
+      email: "wave.digitalmarketer@gmail.com",
+      password: "$2b$10$uDUNOsCodmjAX27jTHfN.uRcIeKvUO3ws45PFCv.cC8/NTrq.0bhC",
       role: "admin",
       isEmailVerified: true,
       subscription: {
