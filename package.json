@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "NEXT_DISABLE_ESLINT=true  next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "create-admin": "bun src/scripts/create-admin.ts",
+    "hash-password": "node src/scripts/hashPassword.js Haseeb,.12"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.0.0",

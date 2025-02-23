@@ -14,7 +14,12 @@ export default async function DashboardPage() {
   const user = session?.user;
   return (
     <div className="flex flex-col gap-8">
-      <h2 className="text-3xl font-bold">Welcome, {user?.name} 👋</h2>
+      <div className="flex flex-col gap-2">
+        <h2 className="text-3xl font-bold">Hey {user?.name} 👋</h2>
+        <p className="text-muted-foreground">
+          Feel stuck? We've got you covered. 
+        </p>
+      </div>
       {/* <DashboardCards /> */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* <RecentResources /> */}

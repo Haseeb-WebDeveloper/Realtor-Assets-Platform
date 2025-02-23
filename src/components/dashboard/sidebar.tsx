@@ -11,6 +11,7 @@ import {
   CreditCard,
   HelpCircle,
   Users,
+  Heart,
 } from "lucide-react";
 
 const routes = [
@@ -18,6 +19,11 @@ const routes = [
     label: "Dashboard",
     icon: LayoutDashboard,
     href: "/dashboard",
+  },
+  {
+    label: "Favorites",
+    icon: Heart,
+    href: "/dashboard/favorites",
   },
   {
     label: "Resources",

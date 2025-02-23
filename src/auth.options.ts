@@ -4,6 +4,7 @@ import Credentials from "next-auth/providers/credentials";
 export const authOptions: NextAuthConfig = {
   providers: [
     Credentials({
+      id: "credentials",
       async authorize(credentials) {
         try {
           const res = await fetch(`${process.env.NEXTAUTH_URL}/api/auth/login`, {
@@ -18,6 +19,26 @@ export const authOptions: NextAuthConfig = {
           return user;
         } catch (error) {
           console.error("Error during authentication:", error);
+          return null;
+        }
+      },
+    }),
+    Credentials({
+      id: "admin-credentials",
+      async authorize(credentials) {
+        try {
+          const res = await fetch(`${process.env.NEXTAUTH_URL}/api/auth/admin/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(credentials),
+          });
+
+          const user = await res.json();
+
+          if (user.error) return null;
+          return user;
+        } catch (error) {
+          console.error("Error during admin authentication:", error);
           return null;
         }
       },
