@@ -1,6 +1,10 @@
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 
+const apiBaseUrl = process.env.NODE_ENV === 'production' 
+  ? 'https://realtor-assets.netlify.app' 
+  : process.env.NEXTAUTH_URL;
+
 export const authOptions: NextAuthConfig = {
   secret: process.env.AUTH_SECRET,
   session: {
@@ -11,7 +15,7 @@ export const authOptions: NextAuthConfig = {
       id: "credentials",
       async authorize(credentials) {
         try {
-          const res = await fetch(`${process.env.NEXTAUTH_URL}/api/auth/login`, {
+          const res = await fetch(`${apiBaseUrl}/api/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(credentials),

@@ -1,0 +1,19 @@
+# Redirect API routes correctly
+[[redirects]]
+  from = "/api/*"
+  to = "/api/:splat"
+  status = 200
+
+# Ensure NextAuth authentication works
+[[redirects]]
+  from = "/api/auth/*"
+  to = "/api/auth/:splat"
+  status = 200
+
+# CORS headers for API
+[[headers]]
+  for = "/api/*"
+    [headers.values]
+      Access-Control-Allow-Origin = "*"
+      Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+      Access-Control-Allow-Headers = "X-Requested-With, Content-Type, Authorization"
