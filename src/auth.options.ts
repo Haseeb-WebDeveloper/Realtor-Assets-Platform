@@ -2,6 +2,10 @@ import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 
 export const authOptions: NextAuthConfig = {
+  secret: process.env.AUTH_SECRET,
+  session: {
+    strategy: "jwt",
+  },
   providers: [
     Credentials({
       id: "credentials",
@@ -13,6 +17,10 @@ export const authOptions: NextAuthConfig = {
             body: JSON.stringify(credentials),
           });
 
+          if (!res.ok) {
+            throw new Error("Invalid credentials");
+          }
+
           const user = await res.json();
 
           if (user.error) return null;
@@ -21,7 +29,7 @@ export const authOptions: NextAuthConfig = {
           console.error("Error during authentication:", error);
           return null;
         }
-      },
+      }
     }),
     Credentials({
       id: "admin-credentials",
@@ -44,19 +52,23 @@ export const authOptions: NextAuthConfig = {
       },
     }),
   ],
+  pages: {
+    signIn: "/login",
+    error: "/auth/error",
+  },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
         token.role = user.role;
+        token.id = user.id;
         token.subscription = user.subscription;
       }
       return token;
     },
     async session({ session, token }) {
-      if (token) {
+      if (token && session.user) {
         session.user.id = token.id as string;
-        session.user.role = token.role as 'user' | 'admin';
+        session.user.role = token.role as "user" | "admin";
         session.user.subscription = token.subscription as {
           plan: "free" | "basic" | "premium";
           status: "active" | "inactive" | "canceled";
