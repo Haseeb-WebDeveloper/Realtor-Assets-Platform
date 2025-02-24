@@ -27,24 +27,19 @@ const routes = [
     href: "/admin/upload",
   },
   {
-    label: "Users",
-    icon: Users,
-    href: "/admin/users",
-  },
-  {
     label: "Resources",
     icon: FileImage,
     href: "/admin/resources",
   },
   {
+    label: "Users",
+    icon: Users,
+    href: "/admin/users",
+  },
+  {
     label: "Categories",
     icon: FolderKanban,
     href: "/admin/categories",
-  },
-  {
-    label: "Analytics",
-    icon: BarChart,
-    href: "/admin/analytics",
   },
   {
     label: "Subscriptions",
