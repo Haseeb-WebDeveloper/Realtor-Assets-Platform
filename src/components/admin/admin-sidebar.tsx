@@ -37,9 +37,9 @@ const routes = [
     href: "/admin/users",
   },
   {
-    label: "Categories",
-    icon: FolderKanban,
-    href: "/admin/categories",
+    label: "Analytics",
+    icon: BarChart,
+    href: "/admin/analytics",
   },
   {
     label: "Subscriptions",

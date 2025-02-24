@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { ResourcesGrid } from "@/components/admin/resources/resources-grid";
 import { ResourcesHeader } from "@/components/admin/resources/resources-header";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Resources | Admin Dashboard",
@@ -10,8 +11,12 @@ export const metadata: Metadata = {
 export default function ResourcesPage() {
   return (
     <div className="flex flex-col gap-6">
-      <ResourcesHeader />
-      <ResourcesGrid />
+      <Suspense>
+        <ResourcesHeader />
+      </Suspense>
+      <Suspense>
+        <ResourcesGrid />
+      </Suspense>
     </div>
   );
-} 
+}
