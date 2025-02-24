@@ -24,19 +24,19 @@ export interface IUser extends Document {
       transactionId: string;
     }>;
   };
+
+  downloadCount: {
+    monthly: number;
+    lastResetDate: Date;
+  };
+  favorites: mongoose.Types.ObjectId[];
   
-  // Resource access tracking
-  resourceAccess: {
-    freeResourcesAccessed: Array<{
-      resourceId: mongoose.Types.ObjectId;
-      accessDate: Date;
-      resourceType: 'template' | 'image' | 'document';
-    }>;
-    downloadCount: {
-      monthly: number;
-      lastResetDate: Date;
-    };
-    favorites: mongoose.Types.ObjectId[];
+  // schedule Assests
+  scheduleAssest: {
+    resourceId: mongoose.Types.ObjectId;
+    scheduleDate: Date;
+    previewUrl: string; 
+    scheduleStatus: 'pending' | 'completed' | 'cancelled';
   };
   
   // User preferences and profile
@@ -110,38 +110,44 @@ const UserSchema = new Schema<IUser>({
       transactionId: String
     }]
   },
-  
-  resourceAccess: {
-    freeResourcesAccessed: [{
-      resourceId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Resource'
-      },
-      accessDate: {
-        type: Date,
-        default: Date.now
-      },
-      resourceType: {
-        type: String,
-        enum: ['template', 'image', 'document']
-      }
-    }],
-    downloadCount: {
-      monthly: {
-        type: Number,
-        default: 0
-      },
-      lastResetDate: {
-        type: Date,
-        default: Date.now
-      }
+
+
+  downloadCount: {
+    monthly: {
+      type: Number,
+      default: 0
     },
-    favorites: [{
+    lastResetDate: {
+      type: Date,
+      default: Date.now
+    }
+  },
+
+  favorites: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Resource'
+  }],
+
+  scheduleAssest: [{
+    resourceId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Resource'
-    }]
-  },
-  
+    },
+    scheduleDate: {
+      type: Date,
+      default: Date.now
+    },
+    scheduleStatus: {
+      type: String,
+      enum: ['pending', 'completed', 'cancelled']
+    },
+    previewUrl: {
+      type: String,
+      default: ''
+    },
+  }],
+
+
   profile: {
     company: String,
     phone: String,

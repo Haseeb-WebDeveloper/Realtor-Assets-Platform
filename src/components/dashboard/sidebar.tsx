@@ -61,7 +61,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="space-y-2 py-4 flex flex-col h-screen bg-background border-r">
+    <div className="sticky top-0 overflow-y-auto space-y-2 py-4 flex flex-col h-screen bg-background border-r">
       <div className="px-3 py-2">
         <Link href="/dashboard" className="flex items-center pl-3 mb-8">
           <h1 className="text-xl font-bold">Realtor Assets</h1>

@@ -67,7 +67,7 @@ export function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="space-y-4 py-4 flex flex-col h-screen bg-background border-r">
+    <div className="sticky top-0 overflow-y-auto space-y-4 py-4 flex flex-col h-screen bg-background border-r">
       <div className="px-3 py-2">
         <Link href="/admin/dashboard" className="flex items-center pl-3 mb-8">
           <h1 className="text-xl font-bold">Admin Dashboard</h1>
