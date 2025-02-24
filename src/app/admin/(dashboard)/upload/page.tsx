@@ -16,7 +16,7 @@ export default async function UploadPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 w-full">
       <div>
         <h2 className="text-3xl font-bold">Upload Asset</h2>
         <p className="text-muted-foreground">

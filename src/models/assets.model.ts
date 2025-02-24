@@ -58,8 +58,8 @@ const MetadataSchema = new Schema(
     tags: [String],
     keywords: [String],
     categories: [String],
-    language: { type: String },
-    source: { type: String },
+    language: { type: String, default: "English" },
+    source: { type: String, default: "" },
   },
   { _id: false }
 );

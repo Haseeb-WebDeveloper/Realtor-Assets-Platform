@@ -4,7 +4,14 @@ import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Upload, X, Loader2, ImagePlus, FileIcon } from "lucide-react";
+import {
+  Upload,
+  X,
+  Loader2,
+  ImagePlus,
+  FileIcon,
+  Link as LinkIcon,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
@@ -16,6 +23,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,6 +34,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -57,13 +68,22 @@ const formSchema = z.object({
   ),
   language: z.string().min(1, "Language is required"),
   source: z.string().optional(),
+  isFree: z.boolean().default(false),
+  status: z.enum(["draft", "published", "archived"]).default("draft"),
+  createdOn: z.string().min(1, "Creation platform is required"),
+  editUrl: z.string().url("Must be a valid URL"),
 });
 
 export function UploadForm() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState<{
+  const [mainFile, setMainFile] = useState<{
+    file: File;
+    preview: string;
+  } | null>(null);
+  const [thumbnail, setThumbnail] = useState<{
     file: File;
     preview: string;
   } | null>(null);
@@ -80,186 +100,208 @@ export function UploadForm() {
       categories: [],
       language: "English",
       source: "",
+      isFree: false,
+      status: "draft",
+      createdOn: "",
+      editUrl: "",
     },
   });
-
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Validate file size (10MB max)
-    if (file.size > 10 * 1024 * 1024) {
-      alert("File size must be less than 10MB");
-      return;
-    }
-
-    // Create preview URL
-    const preview = URL.createObjectURL(file);
-    setUploadedFile({ file, preview });
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const file = e.dataTransfer.files?.[0];
-    if (!file) return;
-
-    // Validate file size
-    if (file.size > 10 * 1024 * 1024) {
-      alert("File size must be less than 10MB");
-      return;
-    }
-
-    const preview = URL.createObjectURL(file);
-    setUploadedFile({ file, preview });
-  };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setIsLoading(true);
-      if (!uploadedFile) return;
 
-      // First, upload the file to Cloudinary
-      const formData = new FormData();
-      formData.append("file", uploadedFile.file);
-      formData.append(
+      if (!mainFile || !thumbnail) {
+        throw new Error("Please upload both main file and thumbnail");
+      }
+
+      // Upload main file to Cloudinary
+      const mainFileData = new FormData();
+      mainFileData.append("file", mainFile.file);
+      mainFileData.append(
         "upload_preset",
         process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
       );
 
-      const uploadResponse = await fetch(
-        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/auto/upload`,
+      const mainFileRes = await fetch(
+        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/raw/upload`,
         {
           method: "POST",
-          body: formData,
+          body: mainFileData,
         }
       );
 
-      const uploadData = await uploadResponse.json();
-      if (!uploadResponse.ok)
-        throw new Error(uploadData.message || "Upload failed");
+      const mainFileJson = await mainFileRes.json();
 
-      // Then create the asset with the Cloudinary URL
+      // Upload thumbnail to Cloudinary
+      const thumbnailData = new FormData();
+      thumbnailData.append("file", thumbnail.file);
+      thumbnailData.append(
+        "upload_preset",
+        process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
+      );
+
+      const thumbnailRes = await fetch(
+        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+        {
+          method: "POST",
+          body: thumbnailData,
+        }
+      );
+
+      const thumbnailJson = await thumbnailRes.json();
+
+      // Create asset
       const response = await fetch("/api/admin/assets", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           ...values,
-          fileUrl: uploadData.secure_url,
-          metadata: {
-            type: values.type,
-            subcategory: values.subcategory,
-            tags: values.tags,
-            keywords: values.keywords,
-            categories: values.categories,
-            language: values.language,
-            source: values.source,
-          },
+          fileUrl: mainFileJson.secure_url,
+          thumbnailUrl: thumbnailJson.secure_url,
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create asset");
+        const error = await response.json();
+        throw new Error(error.message || "Failed to create asset");
       }
 
       router.push("/admin/resources");
       router.refresh();
     } catch (error) {
-      console.error("Error:", error);
-      alert("Failed to create asset. Please try again.");
+      console.error("Error creating asset:", error);
+      // Handle error (show toast, etc.)
     } finally {
       setIsLoading(false);
     }
   };
 
-
-
-      // file size in mb
-      const fileSizeinMB = (fileSize: number) => {
-        return (fileSize / 1024 / 1024).toFixed(2);
-      };
-
   return (
-    <div className="max-w-3xl">
+    <div className="max-w-4xl">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          {/* File Upload */}
-          <div className="space-y-2">
-            <FormLabel>File</FormLabel>
-            <div
-              className="w-full"
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-            >
+          {/* File Upload Section */}
+          <div className="grid grid-cols-2 gap-8">
+            {/* Main File Upload */}
+            <div className="space-y-4">
+              <h3 className="font-medium">Main File</h3>
+              <div
+                className={cn(
+                  "border-2 border-dashed rounded-lg p-8 hover:border-primary/50 transition-colors",
+                  "flex flex-col items-center justify-center gap-4 cursor-pointer",
+                  mainFile ? "border-primary" : "border-muted"
+                )}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {mainFile ? (
+                  <>
+                    <FileIcon className="w-10 h-10 text-primary" />
+                    <p className="text-sm text-muted-foreground">
+                      {mainFile.file.name}
+                    </p>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMainFile(null);
+                      }}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-10 h-10 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">
+                      Click to upload main file
+                    </p>
+                  </>
+                )}
+              </div>
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*,video/*,application/pdf"
                 className="hidden"
-                onChange={handleFileSelect}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setMainFile({
+                      file,
+                      preview: URL.createObjectURL(file),
+                    });
+                  }
+                }}
               />
+            </div>
 
-              {uploadedFile ? (
-                <div className="relative w-full h-full max-w-96 aspect-video mb-4">
-                  {uploadedFile.file.type.startsWith("image/") ? (
+            {/* Thumbnail Upload */}
+            <div className="space-y-4">
+              <h3 className="font-medium">Thumbnail</h3>
+              <div
+                className={cn(
+                  "border-2 border-dashed rounded-lg p-8 hover:border-primary/50 transition-colors",
+                  "flex flex-col items-center justify-center gap-4 cursor-pointer",
+                  thumbnail ? "border-primary" : "border-muted"
+                )}
+                onClick={() => thumbnailInputRef.current?.click()}
+              >
+                {thumbnail ? (
+                  <div className="relative w-full aspect-video">
                     <Image
-                      src={uploadedFile.preview}
-                      alt="Preview"
+                      src={thumbnail.preview}
+                      alt="Thumbnail preview"
                       fill
-                      className="object-contain rounded-lg border"
+                      className="object-cover rounded-lg"
                     />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center border rounded-lg py-12">
-                      <FileIcon className="w-16 h-16 text-muted-foreground" />
-                      <p className="mt-2 text-sm text-muted-foreground truncate max-w-[200px] ">
-                        {uploadedFile.file.name}
-                        <br />
-                        {uploadedFile.file.type}
-                        <br />
-                        {fileSizeinMB(uploadedFile.file.size)} MB
-                      </p>
-                    </div>
-                  )}
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    className="absolute top-2 right-2 rounded-full flex items-center justify-center"
-                    onClick={() => {
-                      setUploadedFile(null);
-                      if (fileInputRef.current) {
-                        fileInputRef.current.value = "";
-                      }
-                    }}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full h-32 flex flex-col gap-2"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Upload className="w-8 h-8" />
-                  <span>Click to upload or drag and drop</span>
-                  <span className="text-xs text-muted-foreground">
-                    Supports images, videos, and PDFs up to 10MB
-                  </span>
-                </Button>
-              )}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute top-2 right-2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setThumbnail(null);
+                      }}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <ImagePlus className="w-10 h-10 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">
+                      Click to upload thumbnail
+                    </p>
+                  </>
+                )}
+              </div>
+              <input
+                ref={thumbnailInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setThumbnail({
+                      file,
+                      preview: URL.createObjectURL(file),
+                    });
+                  }
+                }}
+              />
             </div>
           </div>
 
+          <Separator />
+
           {/* Basic Info */}
-          <div className="grid gap-4">
+          <div className="space-y-4">
             <FormField
               control={form.control}
               name="title"
@@ -283,6 +325,7 @@ export function UploadForm() {
                   <FormControl>
                     <Textarea
                       placeholder="Enter asset description"
+                      className="resize-none"
                       {...field}
                     />
                   </FormControl>
@@ -292,122 +335,229 @@ export function UploadForm() {
             />
           </div>
 
-          {/* Categories */}
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Type</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="social_media">Social Media</SelectItem>
-                      <SelectItem value="marketing_campaign">
-                        Marketing Campaign
-                      </SelectItem>
-                      <SelectItem value="email">Email</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          {/* Metadata Section */}
+          <div>
+            <h3 className="text-lg font-medium mb-4">Metadata</h3>
+            <div className="grid grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Type</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="social_media">
+                            Social Media
+                          </SelectItem>
+                          <SelectItem value="marketing_campaign">
+                            Marketing Campaign
+                          </SelectItem>
+                          <SelectItem value="email">Email Template</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="subcategory"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Subcategory</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select subcategory" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="local_highlight">
-                        Local Highlight
-                      </SelectItem>
-                      <SelectItem value="persona_builder">
-                        Persona Builder
-                      </SelectItem>
-                      <SelectItem value="real_estate">Real Estate</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="subcategory"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Subcategory</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select subcategory" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="local_highlight">
+                            Local Highlight
+                          </SelectItem>
+                          <SelectItem value="persona_builder">
+                            Persona Builder
+                          </SelectItem>
+                          <SelectItem value="real_estate">
+                            Real Estate
+                          </SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="tags"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tags</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter tags (comma separated)"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Add relevant tags separated by commas
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="keywords"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Keywords</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter keywords (comma separated)"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Add search keywords separated by commas
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="categories"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Categories</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter categories (comma separated)"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Add categories separated by commas
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
           </div>
 
-          {/* Tags and Keywords */}
-          <div className="grid gap-4">
-            <FormField
-              control={form.control}
-              name="tags"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tags (comma-separated)</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="real estate, marketing, social media"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <Separator />
 
-            <FormField
-              control={form.control}
-              name="keywords"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Keywords (comma-separated)</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="property, home, real estate"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          {/* Asset Settings */}
+          <div className="grid grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="isFree"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between">
+                    <div>
+                      <FormLabel>Free Resource</FormLabel>
+                      <FormDescription>
+                        Make this asset available for free
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="categories"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Categories (comma-separated)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="marketing, templates" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="draft">Draft</SelectItem>
+                        <SelectItem value="published">Published</SelectItem>
+                        <SelectItem value="archived">Archived</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="createdOn"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Created On</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Canva, Photoshop" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="editUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Edit URL</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Input placeholder="https://..." {...field} />
+                        <LinkIcon className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
 
           {/* Additional Info */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-8">
             <FormField
               control={form.control}
               name="language"
@@ -415,7 +565,7 @@ export function UploadForm() {
                 <FormItem>
                   <FormLabel>Language</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input placeholder="e.g., English" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -429,7 +579,7 @@ export function UploadForm() {
                 <FormItem>
                   <FormLabel>Source (optional)</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input placeholder="Original source if any" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -439,7 +589,9 @@ export function UploadForm() {
 
           <Button
             type="submit"
-            disabled={!uploadedFile || !form.formState.isValid || isLoading}
+            disabled={
+              !mainFile || !thumbnail || !form.formState.isValid || isLoading
+            }
             className="w-full"
           >
             {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

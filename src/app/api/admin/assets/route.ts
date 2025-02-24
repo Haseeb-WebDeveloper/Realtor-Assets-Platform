@@ -12,21 +12,38 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    console.log("Received asset data:", body); // For debugging
+    console.log("Received asset data:", body);
 
     await connectToDatabase();
 
-    const asset = await Asset.create({
-      ...body,
+    // Restructure the data to match the schema
+    const assetData = {
+      title: body.title,
+      description: body.description,
+      fileUrl: body.fileUrl,
+      thumbnailUrl: body.thumbnailUrl,
+      isFree: body.isFree,
+      status: body.status,
       createdBy: session.user.id,
-      published: true,
+      createdOn: body.createdOn,
+      editUrl: body.editUrl,
+      metadata: {
+        type: body.type,
+        subcategory: body.subcategory,
+        tags: body.tags,
+        keywords: body.keywords,
+        categories: body.categories,
+        language: body.language,
+        source: body.source,
+      },
       likedBy: [],
       likedCount: 0,
       favorites: [],
       favoriteCount: 0,
       downloads: 0,
-    });
+    };
 
+    const asset = await Asset.create(assetData);
     return NextResponse.json(asset);
   } catch (error) {
     console.error("[ASSET_CREATE]", error);
