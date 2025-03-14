@@ -8,7 +8,7 @@ export const runtime = 'nodejs';
 export async function POST(req: Request) {
   try {
     const { email, password } = await req.json();
-    
+    console.log(email, password);
     await connectToDatabase();
     
     const user = await User.findOne({ email }).select('+password');
@@ -19,7 +19,8 @@ export async function POST(req: Request) {
         { status: 401 }
       );
     }
-
+    
+    console.log(user);
     const passwordsMatch = await bcrypt.compare(password, user.password);
 
     if (!passwordsMatch) {
@@ -28,6 +29,7 @@ export async function POST(req: Request) {
         { status: 401 }
       );
     }
+    console.log("passwordsMatch", passwordsMatch);
 
     // Don't send the password back
     const userWithoutPassword = {

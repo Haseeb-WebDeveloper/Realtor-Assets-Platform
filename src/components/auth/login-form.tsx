@@ -43,12 +43,14 @@ export function LoginForm() {
     try {
       setIsLoading(true);
       setError(null);
+      console.log(values);
 
       const result = await signIn("credentials", {
         email: values.email,
         password: values.password,
         redirect: false,
       });
+      console.log(result);
 
       if (result?.error) {
         setError("Invalid email or password");

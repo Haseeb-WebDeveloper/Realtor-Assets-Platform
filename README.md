@@ -129,17 +129,15 @@ The application requires Node.js version 18.17.0 or higher.
 
 This project is licensed under the MIT License.
 
-## Learn More
 
-To learn more about Next.js, take a look at the following resources:
+## 🤝 Developer Contact
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Haseeb Ahmed - [web.dev.haseeb@gmail.com](mailto:web.dev.haseeb@gmail.com)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Connect with me on:
+- [LinkedIn](https://pk.linkedin.com/in/haseeb-ahmed-raza-khan)
+- [GitHub](https://github.com/Haseeb-WebDeveloper/)
+- [Instagram](https://www.instagram.com/haseeb.ahmed.raza.khan/)
+- [Portfolio](https://haseebkhan.online/)
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
